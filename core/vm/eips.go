@@ -87,7 +87,7 @@ func opSelfBalance(pc *uint64, interpreter *EVMInterpreter, callContext *callCtx
 	return nil, nil
 }
 
-// enable2937 applies EIP-2937 (SET_INDESRUCTIBLE Opcode)
+// enable2937 applies EIP-2937 (SET_INDESTRUCTIBLE Opcode)
 // - Adds an opcode that prevents contract from calling SELFDESTRUCT (0xFF)
 func enable2937(jt *JumpTable) {
 	// New opcode
@@ -111,9 +111,9 @@ func enable1344(jt *JumpTable) {
 	}
 }
 
-// opSetIndestructible implements forbidding a contract from calling SELFDESTRUCT
+// opSetIndestructible prevents a contract from calling SELFDESTRUCT
 func opSetIndestructible(pc *uint64, interpreter *EVMInterpreter, callContext *callCtx) ([]byte, error) {
-	callContext.contract.Indestructible = true
+	interpreter.indestructible = true
 	return nil, nil
 }
 
