@@ -57,19 +57,10 @@ var (
 	constantinopleInstructionSet   = newConstantinopleInstructionSet()
 	istanbulInstructionSet         = newIstanbulInstructionSet()
 	yoloV2InstructionSet           = newYoloV2InstructionSet()
-	bastanchuryInstructionSet      = newBastanchuryInstructionSet()
 )
 
 // JumpTable contains the EVM opcodes supported at a given fork.
 type JumpTable [256]*operation
-
-// newBastanchuryInstructionSet returns the instruction set containing
-// - "EIP-2937: SET_INDESTRUCTIBLE opcode"
-func newBastanchuryInstructionSet() JumpTable {
-	instructionSet := newYoloV2InstructionSet()
-	enable2937(&instructionSet)
-	return instructionSet
-}
 
 // newYoloV2InstructionSet creates an instructionset containing
 // - "EIP-2315: Simple Subroutines"
@@ -77,7 +68,8 @@ func newBastanchuryInstructionSet() JumpTable {
 func newYoloV2InstructionSet() JumpTable {
 	instructionSet := newIstanbulInstructionSet()
 	enable2315(&instructionSet) // Subroutines - https://eips.ethereum.org/EIPS/eip-2315
-	enable2929(&instructionSet) // Access lists for trie accesses https://eips.ethereum.org/EIPS/eip-2929
+	enable2929(&instructionSet) // Access lists for trie accesses - https://eips.ethereum.org/EIPS/eip-2929
+	enable2937(&instructionSet) // SET_INDESTRUCTIBLE opcode - https://eips.ethereum.org/EIPS/eip-2937
 	return instructionSet
 }
 
