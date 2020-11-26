@@ -47,7 +47,7 @@ type Config struct {
 type Interpreter interface {
 	// Run loops and evaluates the contract's code with the given input data and returns
 	// the return byte-slice and an error if one occurred.
-	Run(contract *Contract, input []byte, static bool) ([]byte, error)
+	Run(contract *Contract, input []byte, static bool, indestructible bool) ([]byte, error)
 	// CanRun tells if the contract, passed as an argument, can be
 	// run by the current interpreter. This is meant so that the
 	// caller can do something like:
@@ -247,6 +247,11 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool, i
 			// return with an error.
 			if operation.writes || (op == CALL && stack.Back(2).Sign() != 0) {
 				return nil, ErrWriteProtection
+			}
+		}
+		if in.indestructible {
+			if operation.selfdestructs {
+				return nil, ErrContractIndestructible
 			}
 		}
 		// Static portion of gas

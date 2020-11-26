@@ -58,8 +58,6 @@ type Contract struct {
 	CodeAddr *common.Address
 	Input    []byte
 
-	Indestructible bool
-
 	Gas   uint64
 	value *big.Int
 }
