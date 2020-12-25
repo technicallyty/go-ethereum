@@ -2561,7 +2561,7 @@ func TestEIP2937IndestructibleDelegatecall(t *testing.T) {
 	st, _ := chain.State()
 
 	if !st.Exist(common.HexToAddress("0x000000000000000000000000000000000000bbbb")) {
-		t.Fatalf("Contract self destruct even with set_indestructible set.")
+		t.Fatalf("Contract self-destructed even when set as indestructible.")
 	}
 }
 
