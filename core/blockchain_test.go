@@ -2437,6 +2437,11 @@ func TestSideImportPrunedBlocks(t *testing.T) {
 	}
 }
 
+// TestEIP2937Indestructible tests if a contract that is set as
+// indestructible can self destruct.
+//
+// Contract 0xAAAA is set as indestructible, and then tries to self destruct.
+// Contract 0xAAAA is unable to self destruct after being set as indestructible.
 func TestEIP2937Indestructible(t *testing.T) {
 	var (
 		aa = common.HexToAddress("0x000000000000000000000000000000000000aaaa")
@@ -2452,9 +2457,9 @@ func TestEIP2937Indestructible(t *testing.T) {
 			Config: params.TestChainConfig,
 			Alloc: GenesisAlloc{
 				address: {Balance: funds},
-				// The address 0xAAAAA selfdestructs if called
+				// The address 0xAAAAA self destructs if called
 				aa: {
-					// Code needs to just selfdestruct
+					// Code calls set indestructible opcode then self destruct opcode
 					Code:    []byte{byte(vm.PC), byte(vm.SETINDESTRUCTIBLE), byte(vm.SELFDESTRUCT)},
 					Nonce:   1,
 					Balance: big.NewInt(0),
@@ -2490,12 +2495,18 @@ func TestEIP2937Indestructible(t *testing.T) {
 	}
 }
 
-// TestEIP2937Indestructible tests for the existance of a contract after delegatecall a contract with self destruct
-//	when the contract had set_indestructible set.
+// TestEIP2937IndestructibleDelegateCall tests the delegate call corner case
+// where contracts set as indestructible could be destroyed during by the
+// contract it delegate calls into.
+//
+// Contract 0xBBBB is set as indestructible and calls 0xAAAA which
+// self destructs. 0xBBBB does not self destruct when delegate calling
+// to a contract which does self destruct.
 func TestEIP2937IndestructibleDelegatecall(t *testing.T) {
 	var (
 		aa = common.HexToAddress("0x000000000000000000000000000000000000aaaa")
 		bb = common.HexToAddress("0x000000000000000000000000000000000000bbbb")
+
 		// Generate a canonical chain to act as the main dataset
 		engine = ethash.NewFaker()
 		db     = rawdb.NewMemoryDatabase()
@@ -2508,14 +2519,15 @@ func TestEIP2937IndestructibleDelegatecall(t *testing.T) {
 			Config: params.TestChainConfig,
 			Alloc: GenesisAlloc{
 				address: {Balance: funds},
-				// The address 0xAAAAA selfdestructs if called
+				// The address 0xAAAAA self destructs if called
 				aa: {
-					// Code needs to just selfdestruct
+					// Code calls self destruct opcode
 					Code:    []byte{byte(vm.PC), byte(vm.SELFDESTRUCT)},
 					Nonce:   1,
 					Balance: big.NewInt(0),
 				},
-				// The address 0xBBBB self destructs
+				// The address 0xBBBB is set as indestructible and uses delegate call
+				// to contract 0xAAAA
 				bb: {
 					Code: []byte{
 						byte(vm.PC), // [0]
@@ -2562,7 +2574,7 @@ func TestEIP2937IndestructibleDelegatecall(t *testing.T) {
 	st, _ := chain.State()
 
 	if !st.Exist(common.HexToAddress("0x000000000000000000000000000000000000bbbb")) {
-		t.Fatalf("Contract self destruct even with set_indestructible set.")
+		t.Fatalf("Contract self destructs even with set_indestructible set.")
 	}
 }
 
