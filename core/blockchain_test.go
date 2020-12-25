@@ -2485,7 +2485,7 @@ func TestEIP2937Indestructible(t *testing.T) {
 	st, _ := chain.State()
 
 	if !st.Exist(common.HexToAddress("0x000000000000000000000000000000000000aaaa")) {
-		t.Fatalf("Contract self destructed.")
+		t.Fatalf("Contract self-destructed.")
 	}
 }
 
