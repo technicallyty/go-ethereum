@@ -538,7 +538,7 @@ func opJumpi(pc *uint64, interpreter *EVMInterpreter, callContext *callCtx) ([]b
 		}
 		*pc = pos.Uint64()
 	} else {
-		*pc++
+		*pc += 1
 	}
 	return nil, nil
 }
