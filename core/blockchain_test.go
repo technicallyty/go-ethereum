@@ -2442,9 +2442,15 @@ func TestSideImportPrunedBlocks(t *testing.T) {
 //
 // Contract 0xAAAA is set as indestructible, and then tries to self destruct.
 // Contract 0xAAAA is unable to self destruct after being set as indestructible.
+//
+// Contract 0xBBBB is set as indestructible when PC!=0.
+// Contract 0xBBBB is able to self destruct since the SETINDESTRUCTIBLE opcode
+// must be the first byte of code to be put into effect.
 func TestEIP2937Indestructible(t *testing.T) {
 	var (
 		aa = common.HexToAddress("0x000000000000000000000000000000000000aaaa")
+		bb = common.HexToAddress("0x000000000000000000000000000000000000bbbb")
+
 		// Generate a canonical chain to act as the main dataset
 		engine = ethash.NewFaker()
 		db     = rawdb.NewMemoryDatabase()
@@ -2457,12 +2463,22 @@ func TestEIP2937Indestructible(t *testing.T) {
 			Config: params.TestChainConfig,
 			Alloc: GenesisAlloc{
 				address: {Balance: funds},
-				// The address 0xAAAAA self destructs if called
+				// The address 0xAAAAA is set as indestructible and tries to self destruct if called
 				aa: {
 					// Code calls set indestructible opcode then self destruct opcode
 					Code:    []byte{byte(vm.PC), byte(vm.SETINDESTRUCTIBLE), byte(vm.SELFDESTRUCT)},
 					Nonce:   1,
 					Balance: big.NewInt(0),
+				},
+				// The address 0xBBBB calls SETINDESTRUCTIBLE when PC!=0 and then tries to self destruct
+				bb: {
+					Code: []byte{
+						byte(vm.PC),          // [0]
+						byte(vm.PUSH1), 0x01, // [0,1] (value)
+						byte(vm.SETINDESTRUCTIBLE),
+						byte(vm.SELFDESTRUCT),
+					},
+					Balance: big.NewInt(1),
 				},
 			},
 		}
@@ -2492,6 +2508,10 @@ func TestEIP2937Indestructible(t *testing.T) {
 
 	if !st.Exist(common.HexToAddress("0x000000000000000000000000000000000000aaaa")) {
 		t.Fatalf("Contract self destructed.")
+	}
+
+	if !st.Exist(common.HexToAddress("0x000000000000000000000000000000000000bbbb")) {
+		t.Fatalf("Contract is unable to self destruct when SETINDESTRUCTIBLE was not the first byte of code")
 	}
 }
 
