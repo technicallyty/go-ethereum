@@ -113,7 +113,9 @@ func enable1344(jt *JumpTable) {
 
 // opSetIndestructible prevents a contract from calling SELFDESTRUCT
 func opSetIndestructible(pc *uint64, interpreter *EVMInterpreter, callContext *callCtx) ([]byte, error) {
-	interpreter.indestructible = true
+	if *pc == 0 {
+		interpreter.indestructible = true
+	}
 	return nil, nil
 }
 
